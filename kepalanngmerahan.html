@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Lengkap Palang Merah & Bulan Sabit Merah</title>
+    <style>
+        :root {
+            --primary-color: #e63946;
+            --secondary-color: #1d3557;
+            --background-color: #f8f9fa;
+            --card-color: #ffffff;
+            --text-color: #2b2d42;
+            --correct-color: #4ade80;
+            --correct-border: #22c55e;
+            --wrong-color: #f87171;
+            --wrong-border: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+
+        .quiz-container {
+            background-color: var(--card-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 650px;
+            width: 100%;
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-top: 0;
+            border-bottom: 2px solid #f1faee;
+            padding-bottom: 10px;
+            font-size: 22px;
+        }
+
+        .quiz-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+            height: 8px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background-color: var(--primary-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question {
+            font-size: 1.15rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: #f1faee;
+            border: 2px solid #a8dadc;
+            border-radius: 8px;
+            padding: 14px 20px;
+            font-size: 1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-color);
+            font-family: inherit;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #a8dadc;
+            border-color: #457b9d;
+        }
+
+        .option-btn.correct {
+            background-color: var(--correct-color) !important;
+            border-color: var(--correct-border) !important;
+            color: #ffffff !important;
+            font-weight: bold;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--wrong-color) !important;
+            border-color: var(--wrong-border) !important;
+            color: #ffffff !important;
+        }
+
+        /* Style Kotak Pembahasan Sesuai Contoh Gambar */
+        .explanation-box {
+            display: none;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-left: 4px solid #ffb703;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: #4a4a4a;
+        }
+        .btn-next:hover {
+            background-color: #112233;
+        }
+
+        .score-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .score-num {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 10px 0;
+        }
+
+        .restart-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+
+        .restart-btn:hover {
+            background-color: #c1121f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h2>Kuis Komprehensif Kepalangmerahan</h2>
+    
+    <div id="quiz-box">
+        <div class="quiz-info">
+            <span id="progress-text">Pertanyaan 1 dari 45</span>
+            <span id="live-score">Skor: 0</span>
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar-fill" id="p-bar"></div>
+        </div>
+
+        <div id="question-text" class="question"></div>
+        <div id="options-box" class="options"></div>
+        
+        <!-- Kotak Pembahasan Hidup -->
+        <div id="pembahasan-box" class="explanation-box"></div>
+        
+        <button type="button" id="nextBtn" class="btn-next" onclick="nextQuestion()">Selanjutnya &raquo;</button>
+    </div>
+
+    <div id="result-box" class="score-container" style="display: none;"></div>
+</div>
+
+<script>
+    const quizData = [
+        // --- 30 SOAL PILIHAN GANDA ASLI ---
+        { 
+            question: "Buku 'Mengenal Gerakan Palang Merah dan Bulan Sabit Merah Internasional' Edisi I diterbitkan di Jakarta pada...", 
+            options: ["Juni 2005", "Juli 2006", "Juni 2008", "Agustus 2008"], 
+            correct: 2,
+            pembahasan: "Buku panduan resmi Gerakan Kepalangmerahan Edisi I cetakan pertamanya diterbitkan secara resmi pada bulan Juni 2008 oleh Markas Pusat PMI."
+        },
+        { 
+            question: "Wadah yang disediakan oleh Palang Merah Indonesia (PMI) untuk membina dan mengembangkan remaja Indonesia adalah...", 
+            options: ["KSR (Korps Sukarela)", "PMR (Palang Merah Remaja)", "TSR (Tenaga Sukarela)", "Sibat (Siaga Bencana Berbasis Masyarakat)"], 
+            correct: 1,
+            pembahasan: "PMR atau Palang Merah Remaja merupakan wadah pembinaan kepalangmerahan khusus bagi generasi muda dan remaja di lingkungan sekolah atau luar sekolah."
+        },
+        { 
+            question: "Anggota PMR Madya adalah tingkatan yang ditujukan untuk remaja berusia...", 
+            options: ["10–12 tahun", "12–15 tahun", "15–17 tahun", "17–20 tahun"], 
+            correct: 1,
+            pembahasan: "Tingkatan PMR dibagi tiga: Mula (10-12 tahun/SD), Madya (12-15 tahun/SMP), dan Wira (15-17 tahun/SMA)."
+        },
+        { 
+            question: "Karakter positif yang ingin dibentuk melalui pelaksanaan pelayanan kepalangmerahan oleh anggota PMR disebut...", 
+            options: ["Tri Bakti PMR", "Dasa Darma", "Panca Sila PMI", "Sapta Karakter"], 
+            correct: 0,
+            pembahasan: "Tri Bakti PMR merupakan tiga pilar utama pelayanan yang melandasi pembentukan karakter dan jiwa kemanusiaan para anggota PMR."
+        },
+        { 
+            question: "Berikut ini yang bukan merupakan bagian dari isi isi Tri Bakti PMR adalah...", 
+            options: ["Meningkatkan keterampilan hidup sehat", "Berkarya dan berbakti di masyarakat", "Mempererat persahabatan nasional dan internasional", "Mencari keuntungan finansial dari pelayanan"], 
+            correct: 3,
+            pembahasan: "PMR mengedepankan prinsip kesukarelaan dan kemanusiaan, sehingga mencari keuntungan finansial bukan merupakan bagian dari tujuan Tri Bakti."
+        },
+        { 
+            question: "Siapakah nama pengusaha Swiss yang menjadi pencetus ide berdirinya gerakan Palang Merah Internasional?", 
+            options: ["Napoleon III", "Jean Henry Dunant", "Dr. RCL Senduk", "Drs. Moh. Hatta"], 
+            correct: 1,
+            pembahasan: "Jean Henry Dunant menuliskan gagasan pertolongan sukarela setelah menyaksikan kengerian perang, yang memicu lahirnya Komite Internasional Palang Merah."
+        },
+        { 
+            question: "Pertempuran dahsyat pada Juni 1859 yang menginspirasi lahirnya Gerakan Palang Merah Internasional terjadi di desa...", 
+            options: ["Jenewa", "Solferino", "Castiglione", "Wina"], 
+            correct: 1,
+            pembahasan: "Pertempuran Solferino terjadi pada 24 Juni 1859 di Italia Utara, mempertemukan pasukan Prancis-Sardinia melawan pasukan Austria."
+        },
+        { 
+            question: "Bangunan yang digunakan oleh Henry Dunant sebagai rumah sakit darurat untuk merawat korban perang yang terluka adalah...", 
+            options: ["Istana Kaisar", "Sekolah umum", "Gereja di desa Castiglione", "Markas militer Prancis"], 
+            correct: 2,
+            pembahasan: "Henry Dunant bersama warga setempat membawa para korban yang terluka ke sebuah gereja terbesar di desa Castiglione, yaitu Chiesa Maggiore."
+        },
+        { 
+            question: "Judul buku yang ditulis oleh Henry Dunant untuk menuangkan pengalaman ngerinya di medan perang adalah...", 
+            options: ["Tutti Fratelli", "Un Souvenir de Solferino (Kenangan Solferino)", "The International Committee of the Red Cross", "Konvensi Jenewa 1864"], 
+            correct: 1,
+            pembahasan: "Buku 'Un Souvenir de Solferino' terbit pada tahun 1862 dan berisi dua gagasan utama: pembentukan perhimpunan sukarelawan dan perjanjian internasional untuk melindungi korban perang."
+        },
+        { 
+            question: "Komite Internasional Pertolongan Korban Luka yang didirikan tahun 1863 di kemudian hari berubah nama menjadi...", 
+            options: ["IFRC", "ICRC", "WHO", "Perhimpunan Nasional"], 
+            correct: 1,
+            pembahasan: "Komite Lima yang awalnya bernama Komite Internasional Pertolongan Korban Luka berubah nama menjadi ICRC (International Committee of the Red Cross)."
+        },
+        { 
+            question: "Konvensi Jenewa Pertama yang diadopsi pada tahun 1864 mengatur tentang...", 
+            options: ["Perbaikan kondisi prajurit yang terluka dalam perang di darat", "Perlindungan tawanan perang", "Perlindungan orang sipil dalam masa konflik bersenjata", "Korban kapal karam dalam perang di laut"], 
+            correct: 0,
+            pembahasan: "Konvensi Jenewa I tahun 1864 berfokus pada perlindungan dan perbaikan kondisi anggota angkatan bersenjata yang terluka dan sakit di medan pertempuran darat."
+        },
+        { 
+            question: "Ada berapa jumlah Konvensi Jenewa yang berlaku dewasa ini untuk melindungi korban konflik bersenjata?", 
+            options: ["2 Konvensi", "3 Konvensi", "4 Konvensi", "5 Konvensi"], 
+            correct: 2,
+            pembahasan: "Hukum Humaniter Internasional saat ini mengakui 4 Konvensi Jenewa (1949) yang mencakup korban di darat, laut, tawanan perang, serta warga sipil."
+        },
+        { 
+            question: "Organisasi Federasi Internasional Perhimpunan-Perhimpunan Palang Merah dan Bulan Sabit Merah (IFRC) didirikan pada tahun...", 
+            options: ["1863", "1864", "1919", "1945"], 
+            correct: 2,
+            pembahasan: "IFRC didirikan setelah Perang Dunia I selesai, tepatnya pada tahun 1919, dipelopori oleh Henry Davison dari Palang Merah Amerika."
+        },
+        { 
+            question: "Fokus utama atau spesialisasi dari Federasi (IFRC) di tingkat internasional adalah...", 
+            options: ["Mengunjungi tawanan politik dan perang", "Memberikan bantuan darurat kemanusiaan kepada korban bencana alam", "Mengajarkan hukum internasional kepada militer", "Mengadili penjahat perang"], 
+            correct: 1,
+            pembahasan: "Berbeda dengan ICRC yang berfokus pada konflik/perang, IFRC bertugas mengkoordinasikan bantuan internasional bagi korban bencana alam dan krisis kesehatan di masa damai."
+        },
+        {
+            question: "Berdasarkan materi, pada tahun 2005 diadopsi sebuah lambang alternatif ketiga yang berbentuk belah ketupat di atas dasar putih, yaitu...", 
+            options: ["Singa dan Matahari Merah", "Kristal Merah", "Palang Hijau", "Bulan Sabit Merah"], 
+            correct: 1,
+            pembahasan: "Protokol Tambahan III tahun 2005 meresmikan lambang Kristal Merah sebagai lambang bebas dari konotasi agama, politik, maupun budaya."
+        },
+        { 
+            question: "Lambang Palang Merah di atas dasar putih sebenarnya merupakan kebalikan dari bendera nasional negara...", 
+            options: ["Prancis", "Austria", "Turki", "Swiss"], 
+            correct: 3,
+            pembahasan: "Sebagai bentuk penghormatan kepada negara asal Henry Dunant, lambang Palang Merah dirancang menggunakan warna kebalikan dari bendera Swiss (palang putih di atas dasar merah)."
+        },
+        { 
+            question: "Dua fungsi utama dari lambang Gerakan Palang Merah adalah sebagai...", 
+            options: ["Tanda Kehormatan dan Tanda Keberanian", "Tanda Pengenal dan Tanda Perlindungan", "Tanda Organisasi dan Tanda Keagamaan", "Tanda Perdagangan dan Tanda Politik"], 
+            correct: 1,
+            pembahasan: "Lambang berfungsi sebagai Tanda Perlindungan (saat konflik berlangsung) dan sebagai Tanda Pengenal (menunjukkan seseorang/fasilitas adalah bagian dari Gerakan)."
+        },
+        { 
+            question: "Penggunaan lambang Palang Merah atau Bulan Sabit Merah oleh kelompok/perorangan untuk tujuan komersial/toko obat tanpa izin termasuk penyalahgunaan kategori...", 
+            options: ["Peniruan", "Penggunaan yang tidak tepat", "Pelanggaran berat", "Kejahatan perang"], 
+            correct: 1,
+            pembahasan: "Kategori 'Penggunaan yang tidak tepat' (improper use) terjadi ketika badan atau individu memakai lambang di luar ketentuan gerakan kemanusiaan resmi, misalnya komersialisasi produk obat."
+        },
+        { 
+            question: "Pada tahun 1932, usulan mendirikan Perhimpunan Palang Merah Indonesia pertama kali diajukan kepada pemerintah Belanda oleh...", 
+            options: ["Drs. Moh. Hatta dan Dr. R. Mochtar", "Dr. RCL Senduk dan Dr. Bahder Djohan", "Dr. Buntaran Martoatmodjo", "Dr. Djoehana dan Dr. Sitanala"], 
+            correct: 1,
+            pembahasan: "Dr. RCL Senduk dan Dr. Bahder Djohan memelopori draf pendirian Palang Merah Indonesia pada 1932 namun ditolak oleh pemerintah kolonial Belanda."
+        },
+        { 
+            question: "Badan kepalangmerahan bentukan Belanda di Indonesia sebelum merdeka dikenal dengan nama...", 
+            options: ["PMI", "NERKAI", "ICRC", "Mobile Colone"], 
+            correct: 1,
+            pembahasan: "NERKAI (Nederlandsche Rode Kruis Afdeeling Indie) merupakan organisasi kepalangmerahan resmi milik pemerintah kolonial Hindia Belanda."
+        },
+        { 
+            question: "Siapakah Presiden RI yang memerintahkan Menteri Kesehatan untuk membentuk Perhimpunan Nasional Palang Merah setelah merdeka?", 
+            options: ["Drs. Moh. Hatta", "Ir. Soekarno", "Dr. Buntaran Martoatmodjo", "Dr. R. Mochtar"], 
+            correct: 1,
+            pembahasan: "Pada 3 September 1945, Presiden Soekarno mengeluarkan instruksi kepada Menteri Kesehatan Dr. Buntaran untuk segera membentuk badan Palang Merah Nasional."
+        },
+        { 
+            question: "Siapakah yang terpilih menjadi Ketua Umum Palang Merah Indonesia (PMI) yang pertama kali pada tanggal 17 September 1945?", 
+            options: ["Dr. R. Mochtar", "Dr. Buntaran Martoatmodjo", "Drs. Moh. Hatta", "Ir. Soekarno"], 
+            correct: 2,
+            pembahasan: "Wakil Presiden pertama RI, Drs. Mohammad Hatta, terpilih dan diangkat menjadi Ketua Umum pertama PMI saat organisasi resmi berdiri pada 17 September 1945."
+        },
+        { 
+            question: "Berapa jumlah anggota 'Panitia Lima' yang bertugas menyusun rencana pembentukan PMI?", 
+            options: ["3 orang", "5 orang", "7 orang", "10 orang"], 
+            correct: 1,
+            pembahasan: "Sesuai namanya, Panitia Lima beranggotakan 5 orang dokter senior, diketuai oleh Dr. R. Mochtar bersama Dr. Bahder Djohan, Dr. Joehana, Dr. Marzuki, dan Dr. Sitanala."
+        },
+        { 
+            question: "Tujuh Prinsip Dasar Gerakan Palang Merah dan Bulan Sabit Merah Internasional diproklamirkan pada konferensi internasional di Wina-Austria pada tahun...", 
+            options: ["1863", "1919", "1945", "1965"], 
+            correct: 3,
+            pembahasan: "Tujuh prinsip dasar kepalangmerahan yang kita kenal sekarang baru resmi diproklamirkan pada Konferensi Internasional Palang Merah ke-20 di Wina tahun 1965."
+        },
+        { 
+            question: "Prinsip yang menegaskan bahwa Gerakan tidak membuat pembedaan berdasarkan kebangsaan, ras, agama, tingkat sosial, atau pandangan politik dinamakan prinsip...", 
+            options: ["Kemanusiaan", "Kesamaan", "Kenetralan", "Kemandirian"], 
+            correct: 1,
+            pembahasan: "Prinsip Kesamaan (Impartiality) mengamanatkan bahwa pertolongan diberikan murni berdasarkan skala prioritas penderitaan korban, tanpa membedakan latar belakang."
+        },
+        { 
+            question: "Prinsip 'Kenetralan' berarti bahwa Gerakan Palang Merah tidak boleh...", 
+            options: ["Menerima dana dari pemerintah", "Terlibat dalam pertentangan politik, ras, agama, atau ideologi", "Membantu korban bencana alam di luar negeri", "Memiliki staf yang digaji"], 
+            correct: 1,
+            pembahasan: "Agar senantiasa mendapat kepercayaan dari semua pihak, Gerakan dilarang keras memihak atau terlibat dalam pertikaian politik, ideologi, maupun keagamaan."
+        },
+        { 
+            question: "Prinsip yang menyatakan bahwa di dalam satu negara hanya boleh ada satu Perhimpunan Nasional Palang Merah atau Bulan Sabit Merah adalah prinsip...", 
+            options: ["Kesatuan", "Kesemestaan", "Kemandirian", "Kesukarelaan"], 
+            correct: 0,
+            pembahasan: "Prinsip Kesatuan (Unity) menegaskan hanya ada satu perhimpunan resmi di satu negara, terbuka untuk semua orang, dan menjalankan tugas kemanusiaan di seluruh wilayah."
+        },
+        { 
+            question: "Prinsip 'Kesemestaan' mengandung arti bahwa...", 
+            options: ["Pelayanan hanya ditujukan untuk kelompok relawan lokal", "Gerakan hadir di seluruh dunia dan setiap Perhimpunan Nasional memiliki status setara serta hak/tanggung jawab yang sama", "Bantuan diberikan secara berbayar demi kelangsungan organisasi", "Hanya negara kaya yang memiliki hak suara istimewa"], 
+            correct: 1,
+            pembahasan: "Prinsip Kesemestaan (Universality) menyatakan bahwa Gerakan Palang Merah bersifat universal di seluruh dunia, di mana setiap perhimpunan nasional berkedudukan sejajar."
+        },
+        { 
+            question: "Materi PMR yang mengajarkan cara memberikan bantuan cepat saat terjadi kecelakaan di jalan, sekolah (melalui UKS), atau di rumah disebut...", 
+            options: ["Remaja Sehat Peduli Sesama", "Pertolongan Pertama", "Ayo Siaga Bencana", "Donor Darah Sukarela"], 
+            correct: 1,
+            pembahasan: "Materi Pertolongan Pertama (PP) memberikan keterampilan dasar medis awal untuk menangani luka, patah tulang, atau pingsan sebelum ditangani tim medis."
+        },
+        { 
+            question: "Ungkapan bahasa Italia 'Tutti Fratelli' yang diteriakkan oleh Henry Dunant dan para sukarelawan di desa Castiglione memiliki arti...", 
+            options: ["Kita sedang berperang!", "Tolonglah diri kalian sendiri!", "Mereka semua saudaraku!", "Damai itu indah!"], 
+            correct: 2,
+            pembahasan: "Kata 'Tutti Fratelli' bermakna 'Kita semua bersaudara'. Semboyan ini menyadarkan para sukarelawan untuk menolong semua tentara yang terluka tanpa melihat kubu lawan maupun kawan."
+        },
+
+        // --- 10 SOAL ISIAN YANG DIUBAH MENJADI PG ---
+        { 
+            question: "Tingkatan PMR untuk anak sekolah/remaja yang berusia antara 10-12 tahun dinamakan...", 
+            options: ["PMR Wira", "PMR Madya", "PMR Mula", "PMR Utama"], 
+            correct: 2,
+            pembahasan: "PMR Mula adalah fase awal pembinaan palang merah remaja, setara dengan usia anak Sekolah Dasar (SD)."
+        },
+        { 
+            question: "Semua unit PMR yang berada di dalam maupun di luar sekolah dibimbing dan dinaungi secara langsung oleh...", 
+            options: ["Puskesmas Setempat", "PMI Cabang", "Dinas Pendidikan", "Kwartir Pramuka"], 
+            correct: 1,
+            pembahasan: "Meskipun bertempat di sekolah, struktur legalitas, pelantikan, kartu anggota, dan pembinaan PMR diatur di bawah struktur PMI Cabang (Kota/Kabupaten)."
+        },
+        { 
+            question: "Dua imbauan utama Henry Dunant dalam bukunya meliputi kesepakatan internasional (konvensi) dan pembentukan...", 
+            options: ["Kelompok relawan di setiap negara", "Pasukan militer gabungan", "Lembaga pendanaan komersial", "Rumah sakit swasta nasional"], 
+            correct: 0,
+            pembahasan: "Dua pemikiran inti Henry Dunant adalah mendirikan perhimpunan bantuan sukarela di setiap negara (Perhimpunan Nasional) dan mengesahkan hukum internasional pelindung korban."
+        },
+        { 
+            question: "Komite Internasional Palang Merah (ICRC) mengkhususkan dirinya untuk membantu korban pada masa...", 
+            options: ["Bencana kekeringan global", "Konflik bersenjata / perang", "Wabah penyakit endemik", "Pembangunan infrastruktur daerah"], 
+            correct: 1,
+            pembahasan: "Mandat utama ICRC berdasarkan Konvensi Jenewa adalah bertindak sebagai lembaga netral saat terjadi peperangan internasional maupun internal."
+        },
+        { 
+            question: "Lambang Bulan Sabit Merah di atas dasar putih secara resmi diadopsi setara dengan lambang Palang Merah pada konvensi tahun...", 
+            options: ["1864", "1919", "1929", "1945"], 
+            correct: 2,
+            pembahasan: "Lambang Bulan Sabit Merah diadopsi resmi lewat revisi Konvensi Jenewa pada tahun 1929, mengakomodasi kekhawatiran dari Kekaisaran Ottoman (Turki)."
+        },
+        { 
+            question: "Fungsi lambang sebagai Tanda Perlindungan digunakan khusus pada saat terjadi...", 
+            options: ["Acara seremonial / ulang tahun PMI", "Konflik, perang, atau bencana besar guna menandai personel medis", "Kampanye donor darah rutin di perkantoran", "Kegiatan latihan rutin PMR di sekolah"], 
+            correct: 1,
+            pembahasan: "Sebagai tanda perlindungan, lambang berukuran besar dipasang di tenda medis, ambulans, atau lengan baju petugas medis di medan perang agar tidak ditembak oleh kubu yang bertikai."
+        },
+        { 
+            question: "Ketua dari Panitia Lima yang dibentuk untuk menyusun rencana berdirinya organisasi PMI adalah...", 
+            options: ["Dr. Buntaran Martoatmodjo", "Dr. R. Mochtar", "Dr. RCL Senduk", "Dr. Bahder Djohan"], 
+            correct: 1,
+            pembahasan: "Panitia Lima ditunjuk langsung oleh Dr. Buntaran selaku menteri kesehatan, dan menunjuk Dr. R. Mochtar sebagai ketuanya."
+        },
+        { 
+            question: "Pasukan Penolong Pertama yang dibentuk oleh cabang-cabang PMI pada awal kemerdekaan untuk membantu korban pertempuran disebut...", 
+            options: ["Korps Sukarela", "Mobile Colone", "Tenaga Sukarela", "Sibat"], 
+            correct: 1,
+            pembahasan: "Mobile Colone adalah barisan unit ambulans dan pertolongan pertama lapangan bergerak yang dibentuk PMI untuk mengamankan korban pertempuran kemerdekaan RI."
+        },
+        {
+         question: "Tujuh landasan moril yang digunakan sebagai pedoman hidup organisasi Palang Merah di seluruh dunia secara kolektif disebut...", 
+            options: ["Dasa Darma Gerakan", "Prinsip Dasar Gerakan Palang Merah dan Bulan Sabit Merah Internasional", "Kode Etik Sukarelawan Dunia", "Tri Bakti Palang Merah Remaja"], 
+            correct: 1,
+            pembahasan: "Tujuh Prinsip Dasar (Kemanusiaan, Kesamaan, Kenetralan, Kemandirian, Kesukarelaan, Kesatuan, Kesemestaan) merupakan aturan moral tertinggi bagi relawan dunia."
+        },
+        { 
+            question: "Sesuai prinsip Kesukarelaan, gerakan pemberian bantuan dilakukan atas dasar komitmen pribadi tanpa ada unsur keinginan mencari...", 
+            options: ["Pengalaman organisasi", "Keuntungan finansial / materi", "Sertifikat penghargaan", "Relasi internasional"], 
+            correct: 1,
+            pembahasan: "Prinsip Kesukarelaan (Voluntary Service) menggarisbawahi bahwa kegiatan kemanusiaan tidak didorong oleh motif mencari laba uang atau imbalan materi."
+        },
+
+        // --- 5 SOAL ESAI YANG DIUBAH MENJADI PG ---
+        { 
+            question: "Manakah pasangan tingkatan PMR berdasarkan usia beserta warna atributnya yang BENAR?", 
+            options: [
+                "Mula (10-12 thn - Hijau), Madya (12-15 thn - Biru), Wira (15-17 thn - Kuning)",
+                "Mula (12-15 thn - Biru), Madya (10-12 thn - Hijau), Wira (15-17 thn - Kuning)",
+                "Mula (10-12 thn - Kuning), Madya (12-15 thn - Biru), Wira (15-17 thn - Hijau)",
+                "Mula (10-12 thn - Hijau), Madya (15-17 thn - Kuning), Wira (12-15 thn - Biru)"
+            ], 
+            correct: 0,
+            pembahasan: "Atribut resmi warna list Slayer/Scarf PMR di Indonesia diatur: PMR Mula menggunakan warna Hijau, PMR Madya warna Biru, dan PMR Wira warna Kuning Cerah."
+        },
+        { 
+            question: "Yang manakah susunan lengkap dari isi pokok 'Tri Bakti PMR'?", 
+            options: [
+                "Meningkatkan keterampilan hidup sehat, berkarya dan berbakti di masyarakat, mempererat persahabatan nasional dan internasional",
+                "Menjaga ketertiban kelas, melatih fisik prajurit, mengumpulkan dana bantuan kemanusiaan",
+                "Mengikuti upacara bendera, mematuhi perintah guru, menolong teman satu bangku sekolah",
+                "Mempelajari hukum perang, mendirikan posko pengungsian mandiri, mencari anggota donor darah baru"
+            ], 
+            correct: 0,
+            pembahasan: "Tiga janji komitmen pokok PMR adalah: 1) Meningkatkan keterampilan hidup sehat, 2) Berkarya dan berbakti di masyarakat, 3) Mempererat persahabatan nasional dan internasional."
+        },
+        { 
+            question: "Berikut ini yang termasuk salah satu syarat mutlak agar suatu Perhimpunan Nasional dapat diakui secara resmi oleh Gerakan Internasional adalah...", 
+            options: [
+                "Merupakan satu-satunya perhimpunan nasional di negaranya dan diakui pemerintah sah",
+                "Harus dipimpin langsung oleh presiden atau wakil presiden negara bersangkutan",
+                "Wajib memiliki cabang aktif di minimal 50 negara asing",
+                "Memungut biaya keanggotaan komersial bulanan untuk biaya operasional"
+            ], 
+            correct: 0,
+            pembahasan: "Salah satu dari 10 syarat pengakuan ICRC adalah Perhimpunan Nasional harus berdiri di negara berdaulat, menjadi satu-satunya organisasi kepalangmerahan nasional di negara tersebut, dan diakui resmi oleh pemerintahnya."
+        },
+        { 
+            question: "Manakah pernyataan yang paling akurat membedakan spesialisasi tugas antara ICRC dan IFRC?", 
+            options: [
+                "ICRC fokus pada konflik bersenjata/perang, sedangkan IFRC fokus pada penanganan bencana alam di masa damai",
+                "ICRC bertugas menggalang dana komersial, sedangkan IFRC bertugas melatih dokter spesialis bedah",
+                "ICRC fokus menangani anak-anak sekolah, sedangkan IFRC khusus menangani militer resmi",
+                "ICRC mengurusi wilayah Asia saja, sedangkan IFRC bergerak di wilayah benua Eropa dan Amerika"
+            ], 
+            correct: 0,
+            pembahasan: "Spesialisasi ICRC adalah ranah konflik/perang (penjaga hukum humaniter), sedangkan IFRC bergerak memimpin pemulihan krisis akibat bencana alam global di situasi damai."
+        },
+        { 
+            question: "Prinsip dasar yang menegaskan bahwa di dalam satu negara hanya boleh ada satu organisasi Perhimpunan Palang Merah atau Bulan Sabit Merah dinamakan prinsip...", 
+            options: ["Kesamaan", "Kesatuan", "Kenetralan", "Kesemestaan"], 
+            correct: 1,
+            pembahasan: "Berdasarkan aturan universal Gerakan, satu negara berdaulat dilarang dualisme organisasi kepalangmerahan. Hal ini diatur tegas oleh Prinsip Kesatuan (Unity)."
+        }
+    ];
+
+    let currentQuiz = 0;
+    let score = 0;
+    let answered = false;
+    const letters = ['A', 'B', 'C', 'D'];
+
+    // Mengacak urutan soal secara acak agar bervariasi tiap kali reload
+    quizData.sort(() => Math.random() - 0.5);
+
+    // Muat soal pertama kali
+    loadQuiz();
+
+    function loadQuiz() {
+        answered = false;
+        document.getElementById('nextBtn').style.display = 'none';
+        
+        // Sembunyikan kotak pembahasan di setiap soal baru
+        document.getElementById('pembahasan-box').style.display = 'none';
+        
+        const currentData = quizData[currentQuiz];
+        
+        // Update Info teks & Progress Bar
+        document.getElementById('progress-text').innerText = `Pertanyaan ${currentQuiz + 1} dari ${quizData.length}`;
+        document.getElementById('p-bar').style.width = `${((currentQuiz) / quizData.length) * 100}%`;
+        
+        // Set Soal
+        document.getElementById('question-text').innerText = currentData.question;
+        
+        // Set Pilihan Opsi Tombol
+        const optionsBox = document.getElementById('options-box');
+        optionsBox.innerHTML = currentData.options.map((option, index) => `
+            <button class="option-btn" id="opt-${index}" onclick="selectOption(${index})">${letters[index]}. ${option}</button>
+        `).join('');
+    }
+
+    function selectOption(optionIndex) {
+        if (answered) return; 
+        answered = true;
+
+        const currentData = quizData[currentQuiz];
+        const correctIdx = currentData.correct;
+
+        // Kunci semua tombol agar tidak bisa diklik ulang
+        const buttons = document.getElementsByClassName('option-btn');
+        for (let btn of buttons) {
+            btn.disabled = true;
+        }
+
+        // Logika pewarnaan benar / salah
+        if (optionIndex === correctIdx) {
+            document.getElementById(`opt-${optionIndex}`).classList.add('correct');
+            score++;
+            document.getElementById('live-score').innerText = `Skor: ${score}`;
+        } else {
+            document.getElementById(`opt-${optionIndex}`).classList.add('wrong');
+            document.getElementById(`opt-${correctIdx}`).classList.add('correct');
+        }
+
+        // --- MEMUNCULKAN KOTAK PEMBAHASAN DETIK ITU JUGA ---
+        const pembBox = document.getElementById('pembahasan-box');
+        pembBox.innerHTML = `<strong>💡 Pembahasan:</strong> Kunci Jawaban (<strong>${letters[correctIdx]}</strong>). ${currentData.pembahasan}`;
+        pembBox.style.display = 'block';
+
+        // Tampilkan tombol "Selanjutnya" untuk lanjut manual
+        document.getElementById('nextBtn').style.display = 'block';
+    }
+
+    function nextQuestion() {
+        currentQuiz++;
+        if (currentQuiz < quizData.length) {
+            loadQuiz();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        document.getElementById('quiz-box').style.display = 'none';
+        const resultBox = document.getElementById('result-box');
+        resultBox.style.display = 'block';
+        
+        const percentage = Math.round((score / quizData.length) * 100);
+        
+        resultBox.innerHTML = `
+            <h3>Selesai! 🎉</h3>
+            <p>Hasil akhir kuis kepalangmerahan Anda:</p>
+            <div class="score-num">${score} / ${quizData.length}</div>
+            <p style="font-size: 1.1rem; font-weight: 500;">Akurasi Nilai: <strong>${percentage}%</strong></p>
+            <button class="restart-btn" onclick="location.reload()">Ulangi Kuis</button>
+        `;
+    }
+</script>
+
+</body>
+</html>   
